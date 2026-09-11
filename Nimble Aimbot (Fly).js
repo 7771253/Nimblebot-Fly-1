@@ -7,8 +7,8 @@
 // @run-at       document-start
 // @license      none
 // @description
-// @downloadURL https://update.greasyfork.org/scripts/587097/Aimbot%20Nimble.user.js
-// @updateURL https://update.greasyfork.org/scripts/587097/Aimbot%20Nimble.meta.js
+// @downloadURL https://github.com/7771253/Nimblebot-Fly-1/blob/main/Nimble%20Aimbot%20(Fly).js
+// @updateURL https://github.com/7771253/Nimblebot-Fly-1/blob/main/Nimble%20Aimbot%20(Fly).js
 // ==/UserScript==
 (function () {
   'use strict';
