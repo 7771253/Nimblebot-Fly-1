@@ -17,13 +17,13 @@
   window.__CR_V10 = true;
 
   // ─── CONFIG ────────────────────────────────────────────────────────────────
-  const BONE_Y_OFFSET   = 0.11;
+  const BONE_Y_OFFSET   = 0.05;
   let LOCK_GAIN     = 0.27;
   let LOCK_MAX_PX   = 50;
   let LOCK_DEADZONE = 2;
   let LERP_SMOOTH   = 1;
   let AURA_RANGE    = 8;
-  const ATTACK_INTERVAL = 80;
+  const ATTACK_INTERVAL = 20;
   const FRIENDS = new Set([
     1234,
     5555
@@ -99,21 +99,31 @@
     }) || null;
   }
 
+  // ─── w2s FROM SCRIPT A (MERGED) ────────────────────────────────────────────
   function w2s(wx, wy, wz, cam, W, H) {
     try {
-      const mw = cam.matrixWorld.elements;
-      const dx = wx - cam.position.x, dy = wy - cam.position.y, dz = wz - cam.position.z;
-      if ((-mw[8])*dx + (-mw[9])*dy + (-mw[10])*dz <= 0) return null;
-      const mv = cam.matrixWorldInverse.elements, p = cam.projectionMatrix.elements;
-      const vx = mv[0]*wx + mv[4]*wy + mv[8]*wz  + mv[12];
-      const vy = mv[1]*wx + mv[5]*wy + mv[9]*wz  + mv[13];
+      const mv = cam.matrixWorldInverse.elements;
+      const p = cam.projectionMatrix.elements;
+
+      const vx = mv[0]*wx + mv[4]*wy + mv[8]*wz + mv[12];
+      const vy = mv[1]*wx + mv[5]*wy + mv[9]*wz + mv[13];
       const vz = mv[2]*wx + mv[6]*wy + mv[10]*wz + mv[14];
-      const cx = p[0]*vx + p[8]*vz, cy = p[5]*vy + p[9]*vz, cw = p[11]*vz;
-      if (!cw) return null;
-      const nx = cx/cw, ny = cy/cw;
-      if (Math.abs(nx) > 1.5 || Math.abs(ny) > 1.5) return null;
-      return { x: (nx+1)/2*W, y: (1-ny)/2*H };
-    } catch (e) { return null; }
+
+      if (vz > 0) return null;
+
+      const cx = p[0]*vx + p[8]*vz;
+      const cy = p[5]*vy + p[9]*vz;
+      const cw = p[11]*vz;
+
+      if (cw === 0) return null;
+
+      return {
+        x: (cx / cw + 1) / 2 * W,
+        y: (1 - cy / cw) / 2 * H
+      };
+    } catch (e) {
+      return null;
+    }
   }
 
   // ─── BONES ─────────────────────────────────────────────────────────────────
@@ -254,11 +264,53 @@
     setTimeout(() => pressClick(canvas), 10);
   }
 
+  // ─── doLockOn FROM SCRIPT A (MERGED) ───────────────────────────────────────
   function doLockOn(players, cam, canvas, W, H) {
-    if (_lockTarget) { const live = players.find(p => p.id === _lockTarget.id); _lockTarget = live || null; }
-    if (!_lockTarget) _lockTarget = findClosest(players, cam);
-    if (!_lockTarget) return;
-    aimAt(_lockTarget, cam, canvas, W, H);
+    if (!players.length || !cam) {
+      _lockTarget = null;
+      return;
+    }
+
+    if (_lockTarget) {
+      const stillExists = players.some(p => p.id === _lockTarget.id);
+      if (!stillExists) _lockTarget = null;
+    }
+
+    if (!_lockTarget) {
+      let minDist = Infinity;
+      players.forEach(p => {
+        const screenPos = w2s(p.pos.x, p.pos.y, p.pos.z, cam, W, H);
+        if (screenPos) {
+          const dist = Math.hypot(screenPos.x - W/2, screenPos.y - H/2);
+          if (dist < minDist) {
+            minDist = dist;
+            _lockTarget = p;
+          }
+        }
+      });
+    }
+
+    const target = players.find(p => p.id === _lockTarget?.id);
+    if (!target) {
+      _lockTarget = null;
+      return;
+    }
+
+    const targetBone = target.bones['Upper'] || target.pos;
+    if (cam.lookAt) {
+      cam.lookAt(targetBone);
+      if (cam.parent) cam.rotation.setFromRotationMatrix(cam.matrixWorld);
+    }
+
+    const screenPos = w2s(targetBone.x, targetBone.y, targetBone.z, cam, W, H);
+    if (!screenPos) return;
+
+    const el = document.pointerLockElement || canvas || document.body;
+    el.dispatchEvent(new MouseEvent('mousemove', {
+      bubbles: true,
+      movementX: screenPos.x - W/2,
+      movementY: screenPos.y - H/2
+    }));
   }
 
   function doAura(players, cam, canvas, W, H) {
@@ -912,7 +964,7 @@
     };
     updateToggles();
     __crFly_updateFlyPanel();
-    console.log('[v10.3.1] ready — T=esp  F=lock  R=aura  L=fly(visual)  M=panel');
+    console.log('[v10.3.1 - Merged with Script A] ready — T=esp  F=lock  R=aura  L=fly(visual)  M=panel');
   });
 
 })();
