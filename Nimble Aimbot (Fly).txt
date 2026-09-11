@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Script B (with Fly)
+// @name         NimbleBotFly
 // @namespace    cuberealm-v160
 // @version      10.3.1
 // @match        https://cuberealm.io/*
