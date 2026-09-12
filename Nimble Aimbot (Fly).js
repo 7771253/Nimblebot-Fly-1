@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         NimbleBotFly
 // @namespace    cuberealm-v160
-// @version      10.3.1
+// @version      10.3.2
 // @match        https://cuberealm.io/*
 // @grant        none
 // @run-at       document-start
@@ -18,12 +18,12 @@
 
   // ─── CONFIG ────────────────────────────────────────────────────────────────
   const BONE_Y_OFFSET   = 0.05;
-  let LOCK_GAIN     = 0.27;
+  let LOCK_GAIN     = 0.12;
   let LOCK_MAX_PX   = 50;
   let LOCK_DEADZONE = 2;
   let LERP_SMOOTH   = 1;
   let AURA_RANGE    = 8;
-  const ATTACK_INTERVAL = 20;
+  const ATTACK_INTERVAL = 1;
   const FRIENDS = new Set([
     1234,
     5555
@@ -33,7 +33,7 @@
     9999
   ]);
 
-  // Fly-specific defaults (from Script A)
+  // Fly-specific defaults
   const FLY_SPEED = 12;
   const FLY_BOOST = 28;
   const FLY_VERT  = 10;
